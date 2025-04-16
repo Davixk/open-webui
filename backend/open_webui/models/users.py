@@ -6,6 +6,7 @@ from open_webui.internal.db import Base, JSONField, get_db
 
 from open_webui.models.chats import Chats
 from open_webui.models.groups import Groups
+from open_webui.config import AppConfig
 
 
 from pydantic import BaseModel, ConfigDict
@@ -191,6 +192,9 @@ class UsersTable:
                 return UserModel.model_validate(user)
         except Exception:
             return None
+    
+    def get_main_admin_user(self, config: AppConfig) -> UserModel:
+        return self.get_user_by_email(config.ADMIN_EMAIL)
 
     def get_user_webhook_url_by_id(self, id: str) -> Optional[str]:
         try:

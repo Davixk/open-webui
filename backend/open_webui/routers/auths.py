@@ -611,24 +611,11 @@ async def add_user(form_data: AddUserForm, user=Depends(get_admin_user)):
 @router.get("/admin/details")
 async def get_admin_details(request: Request, user=Depends(get_current_user)):
     if request.app.state.config.SHOW_ADMIN_DETAILS:
-        admin_email = request.app.state.config.ADMIN_EMAIL
-        admin_name = None
-
-        log.info(f"Admin details - Email: {admin_email}, Name: {admin_name}")
-
-        if admin_email:
-            admin = Users.get_user_by_email(admin_email)
-            if admin:
-                admin_name = admin.name
-        else:
-            admin = Users.get_first_user()
-            if admin:
-                admin_email = admin.email
-                admin_name = admin.name
+        admin = Users.get_main_admin_user(config=request.app.state.config)
 
         return {
-            "name": admin_name,
-            "email": admin_email,
+            "name": admin.name,
+            "email": admin.email,
         }
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.ACTION_PROHIBITED)
@@ -661,6 +648,7 @@ class AdminConfig(BaseModel):
     SHOW_ADMIN_DETAILS: bool
     WEBUI_URL: str
     ENABLE_SIGNUP: bool
+    ADMIN_EMAIL: str
     ENABLE_API_KEY: bool
     ENABLE_API_KEY_ENDPOINT_RESTRICTIONS: bool
     API_KEY_ALLOWED_ENDPOINTS: str
@@ -679,6 +667,7 @@ async def update_admin_config(
     request.app.state.config.SHOW_ADMIN_DETAILS = form_data.SHOW_ADMIN_DETAILS
     request.app.state.config.WEBUI_URL = form_data.WEBUI_URL
     request.app.state.config.ENABLE_SIGNUP = form_data.ENABLE_SIGNUP
+    request.app.state.config.ADMIN_EMAIL = form_data.ADMIN_EMAIL
 
     request.app.state.config.ENABLE_API_KEY = form_data.ENABLE_API_KEY
     request.app.state.config.ENABLE_API_KEY_ENDPOINT_RESTRICTIONS = (
